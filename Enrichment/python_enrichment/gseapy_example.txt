@@ -1,0 +1,909 @@
+
+    #[1]Index [2]Search [3]A Protocol to Prepare files for GSEAPY
+
+   [4]GSEApy
+   latest
+   ____________________
+     * [5]Welcome to GSEAPY’s documentation!
+     * [6]Developmental Guide
+     * [7]A Protocol to Prepare files for GSEAPY
+     * [8]GSEAPY Example
+     * [9]1. (Optional) Convert IDs Using Biomart API
+     * [10]2. Enrichr Example
+          + [11]2.1 Assign enrichr with pd.Series, pd.DataFrame, or list
+            object
+               o [12]2.1.1 gene_sets support list, str.
+               o [13]2.1.2 Local mode of GO analysis
+               o [14]2.1.3 Plotting
+          + [15]2.2 Command line usage
+     * [16]3. Prerank example
+          + [17]3.1 Assign prerank() with a pd.DataFrame, pd.Series , or a
+            txt file
+          + [18]3.2 How to generate your GSEA plot inside python console
+          + [19]3) Command line usage
+     * [20]4. GSEA Example
+          + [21]4.1 Assign gsea() with a pandas DataFrame, .gct format
+            file, or a text file
+          + [22]4.2 Show the gsea plots
+          + [23]4.3 Command line usage
+     * [24]5. Single Sample GSEA example
+          + [25]5.1 Input format
+          + [26]5.2 Access Enrichment Score (ES) and NES
+          + [27]3) command line usage of single sample gsea
+     * [28]6. Replot Example
+          + [29]6.1 locate your directory
+          + [30]6.2 command line usage of replot
+
+   [31]GSEApy
+     * [32]Docs »
+     * GSEAPY Example
+     * [33]Edit on GitHub
+     __________________________________________________________________
+
+GSEAPY Example[34]¶
+
+   Examples to use GSEApy inside python console
+[1]:
+
+%matplotlib inline
+%config InlineBackend.figure_format='retina' # mac
+%load_ext autoreload
+%autoreload 2
+import pandas as pd
+import gseapy as gp
+import matplotlib.pyplot as plt
+
+   Check gseapy version
+[2]:
+
+gp.__version__
+
+[2]:
+
+'0.10.0'
+
+1. (Optional) Convert IDs Using Biomart API[35]¶
+
+   Don’t use this if you don’t know Biomart
+>>> from gseapy.parser import Biomart
+>>> bm = Biomart()
+>>> ## view validated marts
+>>> marts = bm.get_marts()
+>>> ## view validated dataset
+>>> datasets = bm.get_datasets(mart='ENSEMBL_MART_ENSEMBL')
+>>> ## view validated attributes
+>>> attrs = bm.get_attributes(dataset='hsapiens_gene_ensembl')
+>>> ## view validated filters
+>>> filters = bm.get_filters(dataset='hsapiens_gene_ensembl')
+>>> ## query results
+>>> queries = ['ENSG00000125285','ENSG00000182968'] # need to be a python list
+>>> results = bm.query(dataset='hsapiens_gene_ensembl',
+                       attributes=['ensembl_gene_id', 'external_gene_name', 'ent
+rezgene_id', 'go_id'],
+                       filters={'ensemble_gene_id': queries})
+
+2. Enrichr Example[36]¶
+
+[3]:
+
+# read in an example gene list
+gene_list = pd.read_csv("./data/gene_list.txt",header=None, sep="\t")
+gene_list.head()
+
+[3]:
+
+        0
+   0 IGKV4-1
+   1 CD55
+   2 IGKC
+   3 PPFIBP1
+   4 ABHD4
+[4]:
+
+# convert dataframe or series to list
+glist = gene_list.squeeze().str.strip().tolist()
+print(glist[:10])
+
+['IGKV4-1', 'CD55', 'IGKC', 'PPFIBP1', 'ABHD4', 'PCSK6', 'PGD', 'ARHGDIB', 'ITGB
+2', 'CARD6']
+
+   See all supported enrichr library names
+
+   Select database from { ‘Human’, ‘Mouse’, ‘Yeast’, ‘Fly’, ‘Fish’, ‘Worm’
+   }
+
+   Enrichr library could be used for gsea, ssgsea, and prerank, too
+[5]:
+
+names = gp.get_library_name() # default: Human
+names[:10]
+
+[5]:
+
+['ARCHS4_Cell-lines',
+ 'ARCHS4_IDG_Coexp',
+ 'ARCHS4_Kinases_Coexp',
+ 'ARCHS4_TFs_Coexp',
+ 'ARCHS4_Tissues',
+ 'Achilles_fitness_decrease',
+ 'Achilles_fitness_increase',
+ 'Aging_Perturbations_from_GEO_down',
+ 'Aging_Perturbations_from_GEO_up',
+ 'Allen_Brain_Atlas_down']
+
+[6]:
+
+yeast = gp.get_library_name(database='Yeast')
+yeast[:10]
+
+[6]:
+
+['Cellular_Component_AutoRIF',
+ 'Cellular_Component_AutoRIF_Predicted_zscore',
+ 'GO_Biological_Process_2018',
+ 'GO_Biological_Process_AutoRIF',
+ 'GO_Biological_Process_AutoRIF_Predicted_zscore',
+ 'GO_Cellular_Component_2018',
+ 'GO_Cellular_Component_AutoRIF',
+ 'GO_Cellular_Component_AutoRIF_Predicted_zscore',
+ 'GO_Molecular_Function_2018',
+ 'GO_Molecular_Function_AutoRIF']
+
+2.1 Assign enrichr with pd.Series, pd.DataFrame, or list object[37]¶
+
+2.1.1 gene_sets support list, str.[38]¶
+
+   Multi-libraries names supported, separate each name by comma or input a
+   list.
+
+   For example:
+# gene_list
+gene_list="./data/gene_list.txt",
+gene_list=glist
+# gene_sets
+gene_sets='KEGG_2016'
+gene_sets='KEGG_2016,KEGG_2013'
+gene_sets=['KEGG_2016','KEGG_2013']
+
+[7]:
+
+# run enrichr
+# if you are only intrested in dataframe that enrichr returned, please set no_pl
+ot=True
+
+# list, dataframe, series inputs are supported
+enr = gp.enrichr(gene_list="./data/gene_list.txt",
+                 gene_sets=['KEGG_2016','KEGG_2013'],
+                 organism='Human', # don't forget to set organism to the one you
+ desired! e.g. Yeast
+                 description='test_name',
+                 outdir='test/enrichr_kegg',
+                 # no_plot=True,
+                 cutoff=0.5 # test dataset, use lower value from range(0,1)
+                )
+
+[8]:
+
+# obj.results stores all results
+enr.results.head(5)
+
+[8]:
+
+   Gene_set Term Overlap P-value Adjusted P-value Old P-value Old Adjusted
+   P-value Odds Ratio Combined Score Genes
+   0 KEGG_2016 Osteoclast differentiation Homo sapiens hsa04380 28/132
+   3.104504e-13 9.096197e-11 0 0 5.303030 152.731262
+   LILRA6;ITGB3;LILRA2;LILRA5;PPP3R1;FCGR3B;SIRPA...
+   1 KEGG_2016 Tuberculosis Homo sapiens hsa05152 31/178 4.288559e-12
+   6.282739e-10 0 0 4.353933 113.964491
+   RAB5B;ITGB2;PPP3R1;HLA-DMA;FCGR3B;HLA-DMB;CASP...
+   2 KEGG_2016 Phagosome Homo sapiens hsa04145 28/154 1.614009e-11
+   1.576349e-09 0 0 4.545455 112.953250
+   ATP6V1A;RAB5B;ITGB5;ITGB3;ITGB2;HLA-DMA;FCGR3B...
+   3 KEGG_2016 Rheumatoid arthritis Homo sapiens hsa05323 19/90
+   2.197884e-09 1.609950e-07 0 0 5.277778 105.216567
+   ATP6V1A;ATP6V1G1;ATP6V0B;TGFB1;ITGB2;FOS;ITGAL...
+   4 KEGG_2016 Leishmaniasis Homo sapiens hsa05140 17/73 3.132614e-09
+   1.835712e-07 0 0 5.821918 114.001290
+   TGFB1;IFNGR1;PRKCB;IFNGR2;ITGB2;FOS;MAPK14;HLA...
+
+2.1.2 Local mode of GO analysis[39]¶
+
+   If input a .gmt file or gene_set dict object, enrichr runs local.
+   You have to specify the background genes, if local mode used
+
+   For example:
+gene_sets="./data/genes.gmt",
+gene_sets={'A':['gene1', 'gene2',...],
+           'B':['gene2', 'gene4',...],
+           ...}
+
+[9]:
+
+enr2 = gp.enrichr(gene_list="./data/gene_list.txt",
+                 # or gene_list=glist
+                 description='test_name',
+                 gene_sets="./data/genes.gmt",
+                 background='hsapiens_gene_ensembl', # or the number of genes, e
+.g 20000
+                 outdir='test/enrichr_kegg2',
+                 cutoff=0.5, # only used for testing.
+                 verbose=True)
+
+2020-08-11 12:34:31,139 User Defined gene sets is given: ./data/genes.gmt
+2020-08-11 12:34:31,145 Connecting to Enrichr Server to get latest library names
+2020-08-11 12:34:31,171 using all annotated genes with GO_ID as background genes
+2020-08-11 12:34:31,176 Background: found 19041 genes
+2020-08-11 12:34:31,181 Save file of enrichment results: Job Id:5030209168
+2020-08-11 12:34:31,296 Done.
+
+
+[10]:
+
+enr2.results.head(5)
+
+[10]:
+
+         Gene_set        Term    Overlap P-value  Adjusted P-value Genes
+   0 CUSTOM5030209168 BvA_UpIN_A 8/139   0.287984 0.581624
+   MBOAT2;IL1R1;MAP3K5;PCSK6;IQGAP2;MSRB2;HAL;PADI2
+   1 CUSTOM5030209168 BvA_UpIN_B 11/130  0.032532 0.227727
+   SUOX;IL1RAP;GPX8;DYSF;ARHGDIB;KCTD12;LPAR1;SYK...
+   2 CUSTOM5030209168 CvA_UpIN_A 1/12    0.424279 0.581624         MBOAT2
+   3 CUSTOM5030209168 DvA_UpIN_A 16/284  0.210293 0.581624
+   MBOAT2;KIF1B;BCL3;IL1R1;PTGS1;NMNAT1;ATP6V1B2;...
+   4 CUSTOM5030209168 DvA_UpIN_D 12/236  0.372799 0.581624
+   IL1RAP;GLIPR2;GNB4;TXNDC5;DYSF;GPX8;SIRPA;LPAR...
+
+2.1.3 Plotting[40]¶
+
+[11]:
+
+# simple plotting function
+from gseapy.plot import barplot, dotplot
+
+# to save your figure, make sure that ``ofname`` is not None
+barplot(enr.res2d,title='KEGG_2013',)
+
+   [41]_images/gseapy_example_19_0.png
+[12]:
+
+# to save your figure, make sure that ``ofname`` is not None
+dotplot(enr.res2d, title='KEGG_2013',cmap='viridis_r')
+
+[12]:
+
+<matplotlib.axes._subplots.AxesSubplot at 0x12cb196d0>
+
+   [42]_images/gseapy_example_20_1.png
+
+2.2 Command line usage[43]¶
+
+   You may also want to use enrichr in command line
+
+   the option -v will print out the progress of your job
+[13]:
+
+# !gseapy enrichr -i ./data/gene_list.txt \
+#                 --ds BP2017 \
+#                 -g GO_Biological_Process_2017 \
+#                 -v -o test/enrichr_BP
+
+3. Prerank example[44]¶
+
+3.1 Assign prerank() with a pd.DataFrame, pd.Series , or a txt file[45]¶
+
+   Do not include header in your gene list !
+   GSEApy will skip any data after “#”.
+   Only contains two columns, or one cloumn with gene_name indexed when
+   assign a DataFrame to prerank
+[14]:
+
+rnk = pd.read_csv("./data/edb/gsea_data.gsea_data.rnk", header=None, sep="\t")
+rnk.head()
+
+[14]:
+
+          0          1
+   0 CTLA2B       2.502482
+   1 SCARA3       2.095578
+   2 LOC100044683 1.116398
+   3 CMBL         0.877640
+   4 CLIC6        0.822181
+[15]:
+
+# run prerank
+# enrichr libraries are supported by prerank module. Just provide the name
+# use 4 process to acceralate the permutation speed
+
+# note: multiprocessing may not work on windows
+pre_res = gp.prerank(rnk=rnk, gene_sets='KEGG_2016',
+                     processes=4,
+                     permutation_num=100, # reduce number to speed up testing
+                     outdir='test/prerank_report_kegg', format='png', seed=6)
+
+   Leading edge genes save to the final output results
+[16]:
+
+#access results through obj.res2d attribute or obj.results
+pre_res.res2d.sort_index().head()
+
+[16]:
+
+   es nes pval fdr geneset_size matched_size genes ledge_genes
+   Term
+   Cytokine-cytokine receptor interaction Homo sapiens hsa04060 0.418234
+   1.526671 0.064935 0.591133 265 18
+   IL13RA1;CSF1;CCL2;TGFBR2;CD40;IL10RB;CXCL10;CX...
+   IL13RA1;CSF1;CCL2;TGFBR2;CD40;IL10RB;CXCL10
+   Focal adhesion Homo sapiens hsa04510 0.259225 0.859895 0.629032
+   0.993103 202 15 COL6A1;PARVA;FLNC;THBS4;LAMB3;PDGFRB;FLT4;ILK;...
+   COL6A1;PARVA;FLNC;THBS4;LAMB3;PDGFRB
+   HTLV-I infection Homo sapiens hsa05166 0.338286 1.344137 0.137931
+   0.643678 258 19 CRTC3;TGFBR2;CD40;PDGFRB;ADCY6;PPP3CC;ETS1;WNT...
+   CRTC3;TGFBR2;CD40;PDGFRB;ADCY6;PPP3CC;ETS1;WNT...
+   MAPK signaling pathway Homo sapiens hsa04010 0.179667 0.686976 0.847222
+   0.811166 255 18 CACNA1H;TGFBR2;FLNC;MAP3K5;PDGFRB;PPP3CC;NFATC...
+   CACNA1H;TGFBR2;FLNC;MAP3K5;PDGFRB;PPP3CC
+   Metabolic pathways Homo sapiens hsa01100 0.194868 0.902211 0.617647
+   1.000000 1239 36 CMBL;CDA;ST3GAL1;PLD2;CYP26A1;ENO2;GALNT4;PYGL...
+   CMBL;CDA;ST3GAL1;PLD2;CYP26A1;ENO2;GALNT4;PYGL
+
+3.2 How to generate your GSEA plot inside python console[46]¶
+
+   Visualize it using gseaplot
+
+   Make sure that ofname is not None, if you want to save your figure to
+   the disk
+[17]:
+
+# extract geneset terms in res2d
+terms = pre_res.res2d.index
+terms
+
+[17]:
+
+Index(['Pathways in cancer Homo sapiens hsa05200',
+       'Cytokine-cytokine receptor interaction Homo sapiens hsa04060',
+       'HTLV-I infection Homo sapiens hsa05166',
+       'MAPK signaling pathway Homo sapiens hsa04010',
+       'Rap1 signaling pathway Homo sapiens hsa04015',
+       'PI3K-Akt signaling pathway Homo sapiens hsa04151',
+       'Focal adhesion Homo sapiens hsa04510',
+       'Ras signaling pathway Homo sapiens hsa04014',
+       'Metabolic pathways Homo sapiens hsa01100'],
+      dtype='object', name='Term')
+
+[18]:
+
+## easy way
+from gseapy.plot import gseaplot
+
+# to save your figure, make sure that ofname is not None
+gseaplot(rank_metric=pre_res.ranking, term=terms[0], **pre_res.results[terms[0]]
+)
+
+# save figure
+# gseaplot(rank_metric=pre_res.ranking, term=terms[0], ofname='your.plot.pdf', *
+*pre_res.results[terms[0]])
+
+   [47]_images/gseapy_example_31_0.png
+
+3) Command line usage[48]¶
+
+   You may also want to use prerank in command line
+[19]:
+
+# ! gseapy prerank -r temp.rnk -g temp.gmt -o prerank_report_temp
+
+4. GSEA Example[49]¶
+
+4.1 Assign gsea() with a pandas DataFrame, .gct format file, or a text
+file[50]¶
+
+   and cls with a list object or just .cls format file
+[20]:
+
+phenoA, phenoB, class_vector =  gp.parser.gsea_cls_parser("./data/P53.cls")
+
+[21]:
+
+#class_vector used to indicate group attributes for each sample
+print(class_vector)
+
+['MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'M
+UT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT'
+, 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'MUT', 'WT', 'W
+T', 'WT', 'WT', 'WT', 'WT', 'WT', 'WT', 'WT', 'WT', 'WT', 'WT', 'WT', 'WT', 'WT'
+, 'WT', 'WT']
+
+[22]:
+
+gene_exp = pd.read_csv("./data/P53.txt", sep="\t")
+gene_exp.head()
+
+[22]:
+
+   NAME DESCRIPTION 786-0 BT-549 CCRF-CEM COLO 205 EKVX HCC-2998 HCT-15
+   HOP-62 ... MCF7 MOLT-4 NCI-H460 OVCAR-4 SF-539 SK-MEL-5 SR UACC-257
+   UACC-62 UO-31
+   0 TACC2 na 46.05 82.17 16.87 98.60 141.02 114.32 134.34 44.95 ... 68.14
+   32.21 105.89 64.99 53.52 85.47 18.69 32.16 45.70 48.13
+   1 C14orf132 na 108.34 59.04 25.61 33.11 42.53 9.12 9.36 310.96 ...
+   159.32 10.71 13.59 53.78 57.57 86.80 17.30 102.66 62.16 73.44
+   2 AGER na 42.20 25.75 76.01 40.41 32.17 48.28 58.27 42.40 ... 51.50
+   61.48 44.44 45.68 54.17 62.53 83.18 56.57 50.40 36.75
+   3 32385_at na 7.43 13.94 8.55 21.13 15.09 19.05 16.47 7.60 ... 30.77
+   21.27 13.36 16.19 12.07 17.62 22.60 4.50 14.59 11.33
+   4 RBM17 na 11.40 3.00 3.16 2.34 4.43 1.56 6.04 6.16 ... 1.62 2.77 4.42
+   8.91 12.28 3.04 10.13 8.32 8.23 3.91
+
+   5 rows × 52 columns
+[23]:
+
+print("positively correlated: ", phenoA)
+
+positively correlated:  MUT
+
+[24]:
+
+print("negtively correlated: ", phenoB)
+
+negtively correlated:  WT
+
+[25]:
+
+# run gsea
+# enrichr libraries are supported by gsea module. Just provide the name
+
+gs_res = gp.gsea(data=gene_exp, # or data='./P53_resampling_data.txt'
+                 gene_sets='KEGG_2016', # enrichr library names
+                 cls= './data/P53.cls', # cls=class_vector
+                 # set permutation_type to phenotype if samples >=15
+                 permutation_type='phenotype',
+                 permutation_num=100, # reduce number to speed up test
+                 outdir=None,  # do not write output to disk
+                 no_plot=True, # Skip plotting
+                 method='signal_to_noise',
+                 processes=4, seed= 7,
+                 format='png')
+
+/Users/zqfang/Miniconda/lib/python3.7/site-packages/joblib/externals/loky/proces
+s_executor.py:691: UserWarning: A worker stopped while some jobs were given to t
+he executor. This can be caused by a too short worker timeout or by a memory lea
+k.
+  "timeout or by a memory leak.", UserWarning
+
+[26]:
+
+#access the dataframe results throught res2d attribute
+gs_res.res2d.sort_index().head()
+
+[26]:
+
+   es nes pval fdr geneset_size matched_size genes ledge_genes
+   Term
+   ABC transporters Homo sapiens hsa02010 -0.328540 -1.174290 0.252174
+   0.594993 44 33 ABCD3;ABCD4;ABCA2;ABCB7;ABCD1;ABCA3;ABCC9;ABCB...
+   ABCG1;ABCC5;ABCB4;TAP2;CFTR;ABCC10;ABCB11;ABCC...
+   AGE-RAGE signaling pathway in diabetic complications Homo sapiens
+   hsa04933 -0.261859 -1.046512 0.386555 0.739592 101 90
+   F3;PIK3CA;PLCE1;NRAS;RELA;RAC1;PLCB3;MAPK13;MA...
+   COL4A1;AKT3;VCAM1;PIK3R3;SMAD3;STAT1;THBD;SELE...
+   AMPK signaling pathway Homo sapiens hsa04152 0.198892 0.899468 0.714286
+   1.000000 124 89 PPP2R5B;PIK3CA;PPP2R5C;CREB3L1;PRKAA1;CREB3;PP...
+   PPP2R5B;PIK3CA;PPP2R5C;CREB3L1;PRKAA1;CREB3;PP...
+   Acute myeloid leukemia Homo sapiens hsa05221 0.196716 0.710123 0.900000
+   1.000000 57 50 MAP2K1;PIK3CA;NRAS;RELA;RPS6KB2;TCF7L2;JUP;RAF...
+   MAP2K1;PIK3CA;NRAS;RELA;RPS6KB2;TCF7L2;JUP;RAF...
+   Adherens junction Homo sapiens hsa04520 0.246805 0.984227 0.477941
+   1.000000 74 66 EP300;YES1;CTNND1;RAC1;WASF1;ERBB2;ACTN1;PTPRF...
+   EP300;YES1;CTNND1;RAC1;WASF1;ERBB2;ACTN1;PTPRF...
+
+4.2 Show the gsea plots[51]¶
+
+   The gsea module will generate heatmap for genes in each gene sets in
+   the backgroud.
+   But if you need to do it yourself, use the code below
+[27]:
+
+from gseapy.plot import gseaplot, heatmap
+terms = gs_res.res2d.index
+# Make sure that ``ofname`` is not None, if you want to save your figure to disk
+gseaplot(gs_res.ranking, term=terms[0], **gs_res.results[terms[0]])
+
+   [52]_images/gseapy_example_44_0.png
+[28]:
+
+# plotting heatmap
+genes = gs_res.res2d.genes[0].split(";")
+# Make sure that ``ofname`` is not None, if you want to save your figure to disk
+heatmap(df = gs_res.heatmat.loc[genes], z_score=0, title=terms[0], figsize=(18,6
+))
+
+   [53]_images/gseapy_example_45_0.png
+
+4.3 Command line usage[54]¶
+
+   You may also want to use gsea in command line
+[30]:
+
+# !gseapy gsea -d ./data/P53_resampling_data.txt \
+#              -g KEGG_2016 -c ./data/P53.cls \
+#              -o test/gsea_reprot_2 \
+#              -v --no-plot \
+#              -t phenotype
+
+5. Single Sample GSEA example[55]¶
+
+   Note: When you run ssGSEA, all genes names in your gene_sets file
+   should be found in your expression table
+
+   What’s ssGSEA? Which one should I use? Prerank or ssGSEA
+
+   see FAQ [56]here
+
+5.1 Input format[57]¶
+
+   Assign ssgsea() with a txt file, gct file, pd.DataFrame, or
+   pd.Seires(gene name as index)
+[29]:
+
+# txt, gct file input
+ss = gp.ssgsea(data="./data/testSet_rand1200.gct",
+               gene_sets="./data/randomSets.gmt",
+               outdir='test/ssgsea_report',
+               sample_norm_method='rank', # choose 'custom' for your own rank li
+st
+               permutation_num=0, # skip permutation procedure, because you don'
+t need it
+               no_plot=True, # skip plotting, because you don't need these figur
+es
+               processes=4, format='png', seed=9)
+
+[30]:
+
+ss.res2d.sort_index().head()
+
+[30]:
+
+   AA488_A1.2 AA489_A2.2 AA490_A3 AA491_B1 AA492_B2 AA493_B3 AA494_C1.2
+   AA495_C2 AA496_C3 AA497_D1.2 AA498_D3.2 AA499_D2 AA500_x2 AA501_X3
+   AA502_X2.2 AA503_Y1 AA504_Y2 AA505_Y3
+   Term|NES
+   level10_RAND 0.409675 0.412178 0.402321 0.420735 0.423723 0.399593
+   0.417449 0.426562 0.414945 0.427697 0.428861 0.439795 0.439169 0.429886
+   0.421071 0.433796 0.436511 0.427593
+   level12_random 0.623442 0.637662 0.624727 0.636428 0.644896 0.628848
+   0.645327 0.633330 0.637862 0.647586 0.648293 0.638572 0.652058 0.650088
+   0.653153 0.660680 0.659886 0.648956
+   level2_rand -0.271914 -0.281744 -0.271358 -0.277807 -0.279207 -0.260003
+   -0.294843 -0.289941 -0.286516 -0.294068 -0.285716 -0.286194 -0.335032
+   -0.331248 -0.337686 -0.336926 -0.334273 -0.339320
+   level4_rand -0.061550 -0.090115 -0.063876 -0.094134 -0.094397 -0.053017
+   -0.096070 -0.081046 -0.080501 -0.092273 -0.092036 -0.078247 -0.119548
+   -0.120003 -0.129959 -0.143212 -0.138202 -0.126784
+   level6_rand -0.061075 -0.054566 -0.061283 -0.052871 -0.054915 -0.047231
+   -0.059001 -0.069959 -0.061611 -0.055635 -0.058775 -0.062907 -0.020677
+   -0.017325 -0.011440 -0.018986 -0.017288 -0.009031
+[31]:
+
+# or assign a dataframe, or Series to ssgsea()
+ssdf = pd.read_csv("./data/temp.txt", header=None, sep="\t")
+ssdf.head()
+
+[31]:
+
+       0        1
+   0 ATXN1  16.456753
+   1 UBQLN4 13.989493
+   2 CALM1  13.745533
+   3 DLG4   12.796588
+   4 MRE11A 12.787631
+[32]:
+
+# dataframe with one column is also supported by ssGSEA or Prerank
+# But you have to set gene_names as index
+ssdf2 = ssdf.set_index(0)
+ssdf2.head()
+
+[32]:
+
+              1
+     0
+   ATXN1  16.456753
+   UBQLN4 13.989493
+   CALM1  13.745533
+    DLG4  12.796588
+   MRE11A 12.787631
+[33]:
+
+type(ssdf2)
+
+[33]:
+
+pandas.core.frame.DataFrame
+
+[34]:
+
+ssSeries = ssdf2.squeeze()
+type(ssSeries)
+
+[34]:
+
+pandas.core.series.Series
+
+[35]:
+
+# reuse data
+df = pd.read_csv("./data/P53_resampling_data.txt", sep="\t")
+df.head()
+
+[35]:
+
+   NAME 786-0 BT-549 CCRF-CEM COLO 205 EKVX HCC-2998 HCT-15 HOP-62 HOP-92
+   ... MCF7 MOLT-4 NCI-H460 OVCAR-4 SF-539 SK-MEL-5 SR UACC-257 UACC-62
+   UO-31
+   0 CTLA2B 111.19 86.22 121.85 75.19 208.62 130.59 124.72 324.09 242.71
+   ... 163.76 59.50 134.12 152.09 197.46 137.79 81.53 123.37 81.41 180.78
+   1 SCARA3 460.30 558.34 183.55 37.29 158.00 43.61 80.83 300.08 1250.25
+   ... 109.91 120.42 73.06 115.03 95.12 37.56 76.16 41.10 77.51 519.17
+   2 LOC100044683 97.25 118.94 81.17 119.51 119.88 107.73 165.57 203.97
+   135.43 ... 222.84 124.98 114.75 141.66 170.19 147.70 157.48 152.18
+   98.89 118.06
+   3 CMBL 33.45 55.10 221.67 50.30 35.12 75.70 84.01 44.12 79.96 ... 51.32
+   117.11 59.46 78.46 45.55 49.07 96.69 33.09 10.38 52.89
+   4 CLIC6 35.75 41.26 63.04 219.86 42.53 54.19 86.98 71.20 53.89 ...
+   154.05 31.62 37.66 32.64 63.35 27.95 70.99 36.25 17.50 49.41
+
+   5 rows × 51 columns
+[36]:
+
+# Series, DataFrame Example
+# supports dataframe and series
+ssgs = []
+for i, dat in enumerate([ssdf, ssdf2, ssSeries, df]):
+    sstemp = gp.ssgsea(data=dat,
+                       gene_sets="./data/genes.gmt",
+                       outdir='test/ssgsea_report_'+str(i),
+                       scale=False, # set scale to False to get real original ES
+                       permutation_num=0, # skip permutation procedure, because
+you don't need it
+                       no_plot=True, # skip plotting, because you don't need the
+se figures
+                       processes=4, seed=10,
+                       format='png')
+    ssgs.append(sstemp)
+
+2020-08-11 12:38:38,029 Warning: dropping duplicated gene names, only keep the f
+irst values
+
+5.2 Access Enrichment Score (ES) and NES[58]¶
+
+   results save to two attribute:
+    1. obj.resultsOnSamples: ES
+    2. obj.res2d: NES
+
+[37]:
+
+# normalized es save to res2d attri
+# one sample input
+# NES
+ssgs[0].res2d.sort_index().head()
+
+[37]:
+
+                 1
+    Term|NES
+   BvA_UpIN_A 2.150114
+   BvA_UpIN_B 2.953848
+   DvA_UpIN_A 1.985451
+   DvA_UpIN_D 2.457489
+   YvX_UpIN_X 2.148816
+   Note: If you want to obtain the real original enrichment score,
+   you have to set scale=False
+[38]:
+
+# ES
+# convert dict to DataFrame
+es = pd.DataFrame(ssgs[-1].resultsOnSamples)
+es.sort_index().head()
+
+[38]:
+
+   786-0 BT-549 CCRF-CEM COLO 205 EKVX HCC-2998 HCT-15 HOP-62 HOP-92 HS
+   578T ... MCF7 MOLT-4 NCI-H460 OVCAR-4 SF-539 SK-MEL-5 SR UACC-257
+   UACC-62 UO-31
+   Term|ES
+   DvA_UpIN_A 45.703475 6.724266 11.881146 20.639710 36.753558 3.530987
+   5.257504 33.003838 29.227462 41.404387 ... 4.304996 17.789549 19.172561
+   37.144472 40.135942 18.082717 13.901976 44.562272 52.021549 51.156682
+   DvA_UpIN_D 82.960021 86.151980 88.176462 65.077923 80.856467 63.085467
+   53.584047 73.531016 85.803567 87.688120 ... 72.525357 85.020685
+   76.225849 90.948093 97.684104 62.334470 68.252995 73.484066 68.122566
+   86.657296
+
+   2 rows × 50 columns
+[39]:
+
+# if set scale to True, then
+# Scaled ES equal to es/gene_numbers
+ses = es/df.shape[0]
+ses
+
+[39]:
+
+   786-0 BT-549 CCRF-CEM COLO 205 EKVX HCC-2998 HCT-15 HOP-62 HOP-92 HS
+   578T ... MCF7 MOLT-4 NCI-H460 OVCAR-4 SF-539 SK-MEL-5 SR UACC-257
+   UACC-62 UO-31
+   Term|ES
+   DvA_UpIN_A 0.065855 0.009689 0.017120 0.029740 0.052959 0.005088
+   0.007576 0.047556 0.042114 0.059660 ... 0.006203 0.025633 0.027626
+   0.053522 0.057833 0.026056 0.020032 0.064211 0.074959 0.073713
+   DvA_UpIN_D 0.119539 0.124138 0.127055 0.093772 0.116508 0.090901
+   0.077210 0.105952 0.123636 0.126352 ... 0.104503 0.122508 0.109836
+   0.131049 0.140755 0.089819 0.098347 0.105885 0.098159 0.124866
+
+   2 rows × 50 columns
+[40]:
+
+# NES
+# scale or no have no affects on final nes value
+nes = ssgs[-1].res2d
+nes.sort_index().head()
+
+[40]:
+
+   786-0 BT-549 CCRF-CEM COLO 205 EKVX HCC-2998 HCT-15 HOP-62 HOP-92 HS
+   578T ... MCF7 MOLT-4 NCI-H460 OVCAR-4 SF-539 SK-MEL-5 SR UACC-257
+   UACC-62 UO-31
+   Term|NES
+   DvA_UpIN_A 0.402250 0.059182 0.104570 0.181656 0.323479 0.031077
+   0.046273 0.290477 0.257240 0.364413 ... 0.037890 0.156571 0.168744
+   0.326920 0.353249 0.159152 0.122356 0.392206 0.457858 0.450246
+   DvA_UpIN_D 0.730157 0.758250 0.776068 0.572771 0.711643 0.555235
+   0.471610 0.647169 0.755184 0.771770 ... 0.638318 0.748293 0.670887
+   0.800462 0.859748 0.548625 0.600716 0.646756 0.599568 0.762698
+
+   2 rows × 50 columns
+
+3) command line usage of single sample gsea[59]¶
+
+[41]:
+
+# set --no-scale to obtain the real original enrichment score
+# !gseapy ssgsea -d ./data/testSet_rand1200.gct \
+#                -g data/temp.gmt \
+#                -o test/ssgsea_report2  \
+#                -p 4 --no-plot --no-scale
+
+6. Replot Example[60]¶
+
+6.1 locate your directory[61]¶
+
+   notes: replot module need to find edb folder to work properly. keep the
+   file tree like this:
+data
+ |--- edb
+ |    |--- C1OE.cls
+ |    |--- gene_sets.gmt
+ |    |--- gsea_data.gsea_data.rnk
+ |    |--- results.edb
+
+[42]:
+
+# run command inside python console
+rep = gp.replot(indir="./data", outdir="test/replot_test")
+
+6.2 command line usage of replot[62]¶
+
+[43]:
+
+# !gseapy replot -i data -o test/replot_test
+
+[ ]:
+
+
+
+   [63]Previous
+     __________________________________________________________________
+
+   © Copyright 2017-2020, Zhuoqing Fang Revision df5fede7.
+   Built with [64]Sphinx using a [65]theme provided by [66]Read the Docs.
+
+   Read the Docs v: latest
+
+   Versions
+          [67]master
+          [68]latest
+          [69]v0.9.4
+
+   Downloads
+          [70]pdf
+          [71]html
+          [72]epub
+
+   On Read the Docs
+          [73]Project Home
+          [74]Builds
+     __________________________________________________________________
+
+   Free document hosting provided by [75]Read the Docs.
+
+References
+
+   1. https://gseapy.readthedocs.io/en/latest/genindex.html
+   2. https://gseapy.readthedocs.io/en/latest/search.html
+   3. https://gseapy.readthedocs.io/en/latest/gseapy_tutorial.html
+   4. https://gseapy.readthedocs.io/en/latest/index.html
+   5. https://gseapy.readthedocs.io/en/latest/introduction.html
+   6. https://gseapy.readthedocs.io/en/latest/run.html
+   7. https://gseapy.readthedocs.io/en/latest/gseapy_tutorial.html
+   8. https://gseapy.readthedocs.io/en/latest/gseapy_example.html
+   9. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#1.-(Optional)-Convert-IDs-Using-Biomart-API
+  10. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.-Enrichr-Example
+  11. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.1-Assign-enrichr-with-pd.Series,-pd.DataFrame,-or-list-object
+  12. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.1.1-gene_sets-support-list,-str.
+  13. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.1.2-Local-mode-of-GO-analysis
+  14. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.1.3-Plotting
+  15. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.2-Command-line-usage
+  16. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3.-Prerank-example
+  17. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3.1-Assign-prerank()-with-a-pd.DataFrame,-pd.Series-,-or-a-txt-file
+  18. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3.2-How-to-generate-your-GSEA-plot-inside-python-console
+  19. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3)-Command-line-usage
+  20. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#4.-GSEA-Example
+  21. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#4.1-Assign-gsea()-with-a-pandas-DataFrame,-.gct-format-file,-or-a-text-file
+  22. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#4.2-Show-the-gsea-plots
+  23. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#4.3-Command-line-usage
+  24. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#5.-Single-Sample-GSEA-example
+  25. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#5.1-Input-format
+  26. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#5.2-Access-Enrichment-Score-(ES)-and-NES
+  27. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3)-command-line-usage-of-single-sample-gsea
+  28. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#6.-Replot-Example
+  29. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#6.1-locate-your-directory
+  30. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#6.2-command-line-usage-of-replot
+  31. https://gseapy.readthedocs.io/en/latest/index.html
+  32. https://gseapy.readthedocs.io/en/latest/index.html
+  33. https://github.com/zqfang/GSEApy/blob/master/docs/gseapy_example.ipynb
+  34. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#GSEAPY-Example
+  35. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#1.-(Optional)-Convert-IDs-Using-Biomart-API
+  36. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.-Enrichr-Example
+  37. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.1-Assign-enrichr-with-pd.Series,-pd.DataFrame,-or-list-object
+  38. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.1.1-gene_sets-support-list,-str.
+  39. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.1.2-Local-mode-of-GO-analysis
+  40. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.1.3-Plotting
+  41. https://gseapy.readthedocs.io/en/latest/_images/gseapy_example_19_0.png
+  42. https://gseapy.readthedocs.io/en/latest/_images/gseapy_example_20_1.png
+  43. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.2-Command-line-usage
+  44. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3.-Prerank-example
+  45. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3.1-Assign-prerank()-with-a-pd.DataFrame,-pd.Series-,-or-a-txt-file
+  46. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3.2-How-to-generate-your-GSEA-plot-inside-python-console
+  47. https://gseapy.readthedocs.io/en/latest/_images/gseapy_example_31_0.png
+  48. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3)-Command-line-usage
+  49. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#4.-GSEA-Example
+  50. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#4.1-Assign-gsea()-with-a-pandas-DataFrame,-.gct-format-file,-or-a-text-file
+  51. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#4.2-Show-the-gsea-plots
+  52. https://gseapy.readthedocs.io/en/latest/_images/gseapy_example_44_0.png
+  53. https://gseapy.readthedocs.io/en/latest/_images/gseapy_example_45_0.png
+  54. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#4.3-Command-line-usage
+  55. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#5.-Single-Sample-GSEA-example
+  56. https://github.com/zqfang/GSEApy/wiki/FAQ
+  57. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#5.1-Input-format
+  58. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#5.2-Access-Enrichment-Score-(ES)-and-NES
+  59. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3)-command-line-usage-of-single-sample-gsea
+  60. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#6.-Replot-Example
+  61. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#6.1-locate-your-directory
+  62. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#6.2-command-line-usage-of-replot
+  63. https://gseapy.readthedocs.io/en/latest/gseapy_tutorial.html
+  64. http://sphinx-doc.org/
+  65. https://github.com/rtfd/sphinx_rtd_theme
+  66. https://readthedocs.org/
+  67. https://gseapy.readthedocs.io/en/master/
+  68. https://gseapy.readthedocs.io/en/latest/
+  69. https://gseapy.readthedocs.io/en/v0.9.4/
+  70. https://gseapy.readthedocs.io/_/downloads/en/latest/pdf/
+  71. https://gseapy.readthedocs.io/_/downloads/en/latest/htmlzip/
+  72. https://gseapy.readthedocs.io/_/downloads/en/latest/epub/
+  73. https://readthedocs.org/projects/gseapy/?fromdocs=gseapy
+  74. https://readthedocs.org/builds/gseapy/?fromdocs=gseapy
+  75. http://www.readthedocs.org/

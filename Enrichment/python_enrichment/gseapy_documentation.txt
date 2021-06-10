@@ -1,0 +1,268 @@
+
+    #[1]Index [2]Search [3]Welcome to GSEAPY’s documentation!
+
+   [4]GSEApy
+   latest
+   ____________________
+     * [5]Welcome to GSEAPY’s documentation!
+     * [6]Developmental Guide
+     * [7]A Protocol to Prepare files for GSEAPY
+     * [8]GSEAPY Example
+     * [9]1. (Optional) Convert IDs Using Biomart API
+     * [10]2. Enrichr Example
+     * [11]3. Prerank example
+     * [12]4. GSEA Example
+     * [13]5. Single Sample GSEA example
+     * [14]6. Replot Example
+
+   [15]GSEApy
+     * [16]Docs »
+     * Welcome to GSEAPY’s documentation!
+     * [17]Edit on GitHub
+     __________________________________________________________________
+
+Welcome to GSEAPY’s documentation![18]¶
+
+GSEAPY: Gene Set Enrichment Analysis in Python.[19]¶
+
+   [20]https://badge.fury.io/py/gseapy.svg
+   [21]https://img.shields.io/conda/vn/bioconda/GSEApy.svg?style=plastic
+   [22]Action Status
+   [23]https://travis-ci.org/zqfang/GSEApy.svg?branch=master
+   [24]Documentation Status
+   [25]https://img.shields.io/badge/license-MIT-blue.svg PyPI - Python
+   Version [26]https://zenodo.org/badge/DOI/10.5281/zenodo.3748085.svg
+
+   Release notes : [27]https://github.com/zqfang/GSEApy/releases
+
+GSEAPY is a python wrapper for GSEA and Enrichr.[28]¶
+
+   GSEAPY has six subcommands: gsea, prerank, ssgsea, replot enrichr,
+   biomart.
+
+   1. The gsea module produces GSEA results. The input requries a txt
+   file(FPKM, Expected Counts, TPM, et.al), a cls file, and gene_sets file
+   in gmt format.
+
+   2. The prerank module produces Prerank tool results. The input expects
+   a pre-ranked gene list dataset with correlation values, which in .rnk
+   format, and gene_sets file in gmt format. prerank module is an API to
+   GSEA pre-rank tools.
+
+   3. The ssgsea module performs single sample GSEA(ssGSEA) analysis. The
+   input expects a gene list with expression values(same with .rnk file,
+   and gene_sets file in gmt format. ssGSEA enrichment score for the gene
+   set as described by [29]D. Barbie et al 2009.
+
+   4. The replot module reproduces GSEA desktop version results. The only
+   input for GSEAPY is the location to GSEA Desktop output results.
+
+   5. The enrichr module enables you to perform gene set enrichment
+   analysis using Enrichr API. Enrichr is open source and freely available
+   online at: [30]http://amp.pharm.mssm.edu/Enrichr . It runs very fast
+   and generates results in txt format.
+    6. The biomart module helps you convert gene ids using BioMart API.
+
+   GSEAPY could be used for RNA-seq, ChIP-seq, Microarry data. It’s used
+   for convenient GO enrichments and produce publishable quality figures
+   in python.
+
+   The full GSEA is far too extensive to describe here; see [31]GSEA
+   documentation for more information. All files’ formats for GSEApy are
+   identical to GSEA desktop version.
+
+   If you use gseapy, you should cite the original ``GSEA`` and
+   ``Enrichr`` paper.
+
+Why GSEAPY[32]¶
+
+   I would like to use Pandas to explore my data, but I did not find a
+   convenient tool to do gene set enrichment analysis in python. So, here
+   are my reasons:
+     * Ability to run inside python interactive console without having to
+       switch to R!!!
+     * User friendly for both wet and dry lab users.
+     * Produce or reproduce publishable figures.
+     * Perform batch jobs easy.
+     * Easy to use in bash shell or your data analysis workflow, e.g.
+       snakemake.
+
+     * [33]Welcome to GSEAPY’s documentation!
+          + [34]GSEAPY: Gene Set Enrichment Analysis in Python.
+          + [35]GSEAPY is a python wrapper for GESA and Enrichr.
+          + [36]Why GSEAPY
+          + [37]GSEA Java version output:
+          + [38]GSEAPY Prerank module output
+          + [39]GSEAPY enrichr module
+          + [40]Installation
+          + [41]Dependency
+               o [42]Mandatory
+     * [43]Developmental Guide
+          + [44]Module APIs
+          + [45]Algorithm
+          + [46]Enrichr
+          + [47]Parser
+          + [48]Graph
+     * [49]A Protocol to Prepare files for GSEAPY
+          + [50]Use gsea command, or gsea()
+               o [51]1. Prepare an tabular text file of gene expression
+                 like this:
+               o [52]2. An cls file is also expected.
+               o [53]3. Gene_sets file in gmt format.
+          + [54]Use enrichr command, or enrichr()
+          + [55]Use replot Command, or replot()
+     * [56]GSEAPY Example
+     * [57]1. (Optional) Convert IDs Using Biomart API
+     * [58]2. Enrichr Example
+          + [59]2.1 Assign enrichr with pd.Series, pd.DataFrame, or list
+            object
+               o [60]2.1.1 gene_sets support list, str.
+               o [61]2.1.2 Local mode of GO analysis
+               o [62]2.1.3 Plotting
+          + [63]2.2 Command line usage
+     * [64]3. Prerank example
+          + [65]3.1 Assign prerank() with a pd.DataFrame, pd.Series , or a
+            txt file
+          + [66]3.2 How to generate your GSEA plot inside python console
+          + [67]3) Command line usage
+     * [68]4. GSEA Example
+          + [69]4.1 Assign gsea() with a pandas DataFrame, .gct format
+            file, or a text file
+          + [70]4.2 Show the gsea plots
+          + [71]4.3 Command line usage
+     * [72]5. Single Sample GSEA example
+          + [73]5.1 Input format
+          + [74]5.2 Access Enrichment Score (ES) and NES
+          + [75]3) command line usage of single sample gsea
+     * [76]6. Replot Example
+          + [77]6.1 locate your directory
+          + [78]6.2 command line usage of replot
+
+Indices and tables[79]¶
+
+     * [80]Index
+     * [81]Module Index
+     * [82]Search Page
+
+   [83]Next
+     __________________________________________________________________
+
+   © Copyright 2017-2020, Zhuoqing Fang Revision df5fede7.
+   Built with [84]Sphinx using a [85]theme provided by [86]Read the Docs.
+
+   Read the Docs v: latest
+
+   Versions
+          [87]master
+          [88]latest
+          [89]v0.9.4
+
+   Downloads
+          [90]pdf
+          [91]html
+          [92]epub
+
+   On Read the Docs
+          [93]Project Home
+          [94]Builds
+     __________________________________________________________________
+
+   Free document hosting provided by [95]Read the Docs.
+
+References
+
+   1. https://gseapy.readthedocs.io/en/latest/genindex.html
+   2. https://gseapy.readthedocs.io/en/latest/search.html
+   3. https://gseapy.readthedocs.io/en/latest/introduction.html
+   4. https://gseapy.readthedocs.io/en/latest/
+   5. https://gseapy.readthedocs.io/en/latest/introduction.html
+   6. https://gseapy.readthedocs.io/en/latest/run.html
+   7. https://gseapy.readthedocs.io/en/latest/gseapy_tutorial.html
+   8. https://gseapy.readthedocs.io/en/latest/gseapy_example.html
+   9. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#1.-(Optional)-Convert-IDs-Using-Biomart-API
+  10. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.-Enrichr-Example
+  11. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3.-Prerank-example
+  12. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#4.-GSEA-Example
+  13. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#5.-Single-Sample-GSEA-example
+  14. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#6.-Replot-Example
+  15. https://gseapy.readthedocs.io/en/latest/
+  16. https://gseapy.readthedocs.io/en/latest/
+  17. https://github.com/zqfang/GSEApy/blob/master/docs/index.rst
+  18. https://gseapy.readthedocs.io/en/latest/#welcome-to-gseapy-s-documentation
+  19. https://gseapy.readthedocs.io/en/latest/#gseapy-gene-set-enrichment-analysis-in-python
+  20. https://badge.fury.io/py/gseapy
+  21. http://bioconda.github.io/
+  22. https://github.com/zqfang/GSEApy/actions
+  23. https://travis-ci.org/zqfang/GSEApy
+  24. http://gseapy.readthedocs.io/en/master/?badge=master
+  25. https://img.shields.io/badge/license-MIT-blue.svg
+  26. https://doi.org/10.5281/zenodo.3748085
+  27. https://github.com/zqfang/GSEApy/releases
+  28. https://gseapy.readthedocs.io/en/latest/#gseapy-is-a-python-wrapper-for-gsea-and-enrichr
+  29. http://www.nature.com/nature/journal/v462/n7269/abs/nature08460.html
+  30. http://amp.pharm.mssm.edu/Enrichr
+  31. http://www.broadinstitute.org/cancer/software/gsea/wiki/index.php/Main_Page
+  32. https://gseapy.readthedocs.io/en/latest/#why-gseapy
+  33. https://gseapy.readthedocs.io/en/latest/introduction.html
+  34. https://gseapy.readthedocs.io/en/latest/introduction.html#gseapy-gene-set-enrichment-analysis-in-python
+  35. https://gseapy.readthedocs.io/en/latest/introduction.html#gseapy-is-a-python-wrapper-for-gesa-and-enrichr
+  36. https://gseapy.readthedocs.io/en/latest/introduction.html#why-gseapy
+  37. https://gseapy.readthedocs.io/en/latest/introduction.html#gsea-java-version-output
+  38. https://gseapy.readthedocs.io/en/latest/introduction.html#gseapy-prerank-module-output
+  39. https://gseapy.readthedocs.io/en/latest/introduction.html#gseapy-enrichr-module
+  40. https://gseapy.readthedocs.io/en/latest/introduction.html#installation
+  41. https://gseapy.readthedocs.io/en/latest/introduction.html#dependency
+  42. https://gseapy.readthedocs.io/en/latest/introduction.html#mandatory
+  43. https://gseapy.readthedocs.io/en/latest/run.html
+  44. https://gseapy.readthedocs.io/en/latest/run.html#module-apis
+  45. https://gseapy.readthedocs.io/en/latest/run.html#module-gseapy.algorithm
+  46. https://gseapy.readthedocs.io/en/latest/run.html#module-gseapy.enrichr
+  47. https://gseapy.readthedocs.io/en/latest/run.html#module-gseapy.parser
+  48. https://gseapy.readthedocs.io/en/latest/run.html#module-gseapy.plot
+  49. https://gseapy.readthedocs.io/en/latest/gseapy_tutorial.html
+  50. https://gseapy.readthedocs.io/en/latest/gseapy_tutorial.html#use-gsea-command-or-gsea
+  51. https://gseapy.readthedocs.io/en/latest/gseapy_tutorial.html#prepare-an-tabular-text-file-of-gene-expression-like-this
+  52. https://gseapy.readthedocs.io/en/latest/gseapy_tutorial.html#an-cls-file-is-also-expected
+  53. https://gseapy.readthedocs.io/en/latest/gseapy_tutorial.html#gene-sets-file-in-gmt-format
+  54. https://gseapy.readthedocs.io/en/latest/gseapy_tutorial.html#use-enrichr-command-or-enrichr
+  55. https://gseapy.readthedocs.io/en/latest/gseapy_tutorial.html#use-replot-command-or-replot
+  56. https://gseapy.readthedocs.io/en/latest/gseapy_example.html
+  57. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#1.-(Optional)-Convert-IDs-Using-Biomart-API
+  58. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.-Enrichr-Example
+  59. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.1-Assign-enrichr-with-pd.Series,-pd.DataFrame,-or-list-object
+  60. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.1.1-gene_sets-support-list,-str.
+  61. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.1.2-Local-mode-of-GO-analysis
+  62. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.1.3-Plotting
+  63. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#2.2-Command-line-usage
+  64. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3.-Prerank-example
+  65. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3.1-Assign-prerank()-with-a-pd.DataFrame,-pd.Series-,-or-a-txt-file
+  66. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3.2-How-to-generate-your-GSEA-plot-inside-python-console
+  67. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3)-Command-line-usage
+  68. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#4.-GSEA-Example
+  69. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#4.1-Assign-gsea()-with-a-pandas-DataFrame,-.gct-format-file,-or-a-text-file
+  70. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#4.2-Show-the-gsea-plots
+  71. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#4.3-Command-line-usage
+  72. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#5.-Single-Sample-GSEA-example
+  73. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#5.1-Input-format
+  74. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#5.2-Access-Enrichment-Score-(ES)-and-NES
+  75. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#3)-command-line-usage-of-single-sample-gsea
+  76. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#6.-Replot-Example
+  77. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#6.1-locate-your-directory
+  78. https://gseapy.readthedocs.io/en/latest/gseapy_example.html#6.2-command-line-usage-of-replot
+  79. https://gseapy.readthedocs.io/en/latest/#indices-and-tables
+  80. https://gseapy.readthedocs.io/en/latest/genindex.html
+  81. https://gseapy.readthedocs.io/en/latest/py-modindex.html
+  82. https://gseapy.readthedocs.io/en/latest/search.html
+  83. https://gseapy.readthedocs.io/en/latest/introduction.html
+  84. http://sphinx-doc.org/
+  85. https://github.com/rtfd/sphinx_rtd_theme
+  86. https://readthedocs.org/
+  87. https://gseapy.readthedocs.io/en/master/
+  88. https://gseapy.readthedocs.io/en/latest/
+  89. https://gseapy.readthedocs.io/en/v0.9.4/
+  90. https://gseapy.readthedocs.io/_/downloads/en/latest/pdf/
+  91. https://gseapy.readthedocs.io/_/downloads/en/latest/htmlzip/
+  92. https://gseapy.readthedocs.io/_/downloads/en/latest/epub/
+  93. https://readthedocs.org/projects/gseapy/?fromdocs=gseapy
+  94. https://readthedocs.org/builds/gseapy/?fromdocs=gseapy
+  95. http://www.readthedocs.org/
