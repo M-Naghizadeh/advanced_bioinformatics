@@ -1,0 +1,227 @@
+
+## Gene set enrichment analysis
+ 
+ **Gene set enrichment analysis** (also **functional enrichment analysis**) is a method to identify set of **genes** or **proteins** that are over-represented in a large set of genes or proteins and may have association with disease phenotype. Gene sets are usually specific genes that are involved in a particular biological function or particular location in cells. To observe several gene sets refer to some of the databases that provide them such as **GO**, **KEGG**, **MSigDB**. Researchers performing high-throughput experiments usually perform enrichemnt analysis to see if a specific set of gene is overrepresented in their differentially expressed genes or not. To read a good introduction about enrichment analysis read [wikipedia](https://en.wikipedia.org/wiki/Gene_set_enrichment_analysis).
+ 
+ To see the major collection of gene sets of MSigDB database refer to the [website](https://www.gsea-msigdb.org/gsea/msigdb). Similarly gene sets from other databases such as KEGG and GO are accessible by database website. For example to see the gene set of *Toll-like receptor binding* in GO refer to [GO website](http://amigo.geneontology.org/amigo/term/GO:0035325).
+ 
+ Furthermore, the gene sets of MSigDB in dataformat is packed in the R package **msigdbr** that can be used directly with **clusterProfiler**. 
+ 
+```{r}
+library(msigdbr)
+msigdbr_species()
+```
+ Available collections of gene sets is MSigDB;
+ 
+```{r}
+library(msigdbr)
+db <- msigdbr_collections()
+db[0:20, ]
+```
+ As it is clear, the KEGG database has 186 gene sets. To see all the gene sets of KEGG for human;
+ 
+```{r}
+library(msigdbr)
+df <- msigdbr(species = 'Homo sapiens', category = 'C2', subcategory = 'CP:KEGG')
+str(df)
+data.frame(table(df[, 3]))
+```
+
+ To see the list of genes in a particular KEGG gene set such as KEGG_CELL_CYCLE;
+
+```{r}
+genes <- df[df[,3] == 'KEGG_CELL_CYCLE', ][, c(3, 4)]
+data.frame(genes)
+```
+### GO enrichemnt analysis
+ To perform Gene Ontology enrichment analysis first we need a sample vector of genes (Differentially expressed genes in our microarray test). For this purpose we use genelist data in DOSE package.
+```{r}
+library(DOSE)
+data(geneList)
+head(geneList)
+```
+ Among these genes we select only genes with foldchange more than two as our differentially expressed gene list. 
+
+```{r}
+DEgenes <-geneList[abs(geneList) > 2 ]
+length(DEgenes)
+head(DEgenes)
+```
+ In order to perform ID conversion, Bioconductor provide annotation objects (OrgDb) for species. 
+ 
+```{r}
+library('org.Hs.eg.db')
+```
+ In this notebook we use clusterProfiler package in R to perform GSEA.
+
+```{r}
+library(clusterProfiler)
+library(pathview)
+library(enrichplot)
+library(ggplot2)
+```
+ In order to perform ID conversion on DEgenes, bitr function in clusterProfiler is used.
+
+```{r}
+DEgenes.symbols <- bitr(names(DEgenes), fromType = 'ENTREZID',
+            toType = c('ENSEMBL', 'SYMBOL'), OrgDb = 'org.Hs.eg.db')
+head(DEgenes.symbols)
+```
+ To see the GO profile of a gene set at specific level groupGO is used.
+
+```{r} 
+ggo <- groupGO(gene = names(DEgenes),
+                OrgDb = org.Hs.eg.db,
+                ont = 'CC',
+                level = 3,
+                readable = TRUE)
+head(ggo)                
+```
+ overrepresentation analysis is performed to see if a gene set is overrepresented in your gene list. To perform overrepresentation analysis use enrichGO: 
+
+```{r}
+ego <- enrichGO(gene = names(DEgenes),
+                universe = names(geneList),
+                OrgDb = org.Hs.eg.db,
+                ont = 'CC',
+                pAdjustMethod = 'BH',
+                pvalueCutoff = 0.01,
+                qvalueCutoff = 0.05,
+                readable = T)
+head(ego)
+```
+
+ gseGO is used to perform gene enrichment analysis of GO:
+ 
+```{r}
+DEgenes <- sort(DEgenes, decreasing = T)
+gse <- gseGO(geneList = DEgenes,
+        ont = 'ALL', 
+        keyType = 'ENTREZID',
+        nPerm = 10000,
+        minGSSize = 3,
+        maxGSSize = 800,
+        pvalueCutoff = 0.05, 
+        verbose = T, 
+        OrgDb = 'org.Hs.eg.db',
+        pAdjustMethod = 'none')
+```       
+
+```{r}
+head(gse)
+```
+
+ To draw dotplot use the dotplot function:
+
+```{r}
+require(DOSE)
+dotplot(gse, showCategory = 10, split = '.sign') + facet_grid(.~.sign)
+```
+ Use emapplot in enrichplot package to draw enrichment plot of gene enrichment analysis resutl.
+ 
+```{r}
+require(pathview)
+emapplot(gse, showCategory = 10)
+```
+ use cnetplot in enrichplot package for gene-concept network plot:
+
+```{r}
+cnetplot(gse, categorySize = 'pvalue', foldChange = DEgenes, showCategory = 3)
+```
+ for ridgeline plot for GSEA result use ridgeplot of enrichplot package:
+
+```{r}
+ridgeplot(gse) + labs(x = 'enrichment distribution')
+```
+ for visualizing gsea result use gseaplot in enrichplot package:
+
+```{r}
+gseaplot(gse, by = 'all', title = gse$Description[1], geneSetID = 1)
+```
+
+ pmc plot;
+
+```{r}
+pmcplot(gse$Description[1:3], 2015:2021, proportion =FALSE)
+```
+
+
+### KEGG Gene set enrichment analysis
+
+ Homo sapiens kegg code;
+
+```{r}
+library(clusterProfiler)
+homo_code <- search_kegg_organism('Homo sapiens', by = 'scientific_name')
+head(homo_code)
+```
+ KEGG overrepresentation analysis;
+
+```{r}
+ekk <- enrichKEGG(gene = names(DEgenes),
+                    organism = 'hsa', 
+                    pvalueCutoff = 0.05)
+head(ekk)
+```
+ KEGG enrichment analysis:
+
+```{r}
+kea <- gseKEGG(geneList = geneList, 
+                organism = 'hsa', 
+                nPerm = 1000,
+                minGSSize = 3,
+                pvalueCutoff = 0.05)
+head(kea)
+```
+
+ Dotplot:
+
+```{r}
+dotplot(kea, showCategory = 10, title = 'Enriched Pathways', 
+        split = '.sign') + facet_grid(.~.sign)
+```        
+ emapplot:
+ 
+```{r}
+emapplot(kea) 
+```
+
+ Category netplot:
+
+```{r}
+cnetplot(kea, categorySize = 'pvalue', foldchange = geneList)
+```
+
+ ridgeplot:
+
+```{r}
+ridgeplot(kea) + labs(x = 'enrichment distribution')
+```
+ GSEA plot:
+
+```{r}
+gseaplot(kea, by = 'all', title = kea$Description[1], geneSetID = 1)
+```
+
+ pathview:
+ 
+```{r}
+# pathview(gene.data = geneList,pathway.id = 'hsa04510', species = 'hsa', kegg.native = F)
+```
+```{r}
+pathview(gene.data = geneList,pathway.id = 'hsa04510', species = 'hsa', kegg.native = T)
+```
+
+
+```{r}
+pathview(gene.data = geneList,pathway.id = 'hsa04510', species = 'hsa')
+```
+
+```{r}
+knitr::include_graphics('hsa04510.png')
+```
+
+```{r}
+knitr::include_graphics('hsa04510.pathview.png')
+```
+
